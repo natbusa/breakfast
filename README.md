@@ -94,6 +94,108 @@ First implementation
 
 The first implementation consists of four files. Two files define the objects of the breakfast (Elements.scala and JsonImplicit.scala), one defines the API and the last define the main http listener service.
 
+The breakfast elements
+```scala
+package com.natalinobusa.breakfast.elements
+
+case class ToastedBread(slices: Int)
+case class FriedEggs(num: Int)
+case class CrispyBacon(strips: Int)
+case class OrangeJuice(glasses: Int)
+case class HotCoffee(mugs: Int)
+
+case class MainDish(eggs: FriedEggs, bacon: CrispyBacon)
+case class SideDish(toast: ToastedBread)
+case class Drinks(juice: OrangeJuice, coffee: HotCoffee)
+
+case class Breakfast(main: MainDish, side: SideDish, drink: Drinks)
+```
+
+The json (un-)marshalling
+
+```scala
+import spray.json.DefaultJsonProtocol
+
+object JsonImplicits extends DefaultJsonProtocol {
+  //main dish
+  implicit val impCrispyBacon = jsonFormat1(CrispyBacon)
+  implicit val impFriedEggs = jsonFormat1(FriedEggs)
+  implicit val impMainDish = jsonFormat2(MainDish)
+
+  //side dish
+  implicit val impToastedBread = jsonFormat1(ToastedBread)
+  implicit val impSideDish = jsonFormat1(SideDish)
+
+  //drinks
+  implicit val impHotCoffee = jsonFormat1(HotCoffee)
+  implicit val impOrangeJuice = jsonFormat1(OrangeJuice)
+  implicit val impDrinks = jsonFormat2(Drinks)
+
+  //breakfast
+  implicit val impBreakfast = jsonFormat3(Breakfast)
+}
+```
+
+
+Breakfast service:
+
+```scala
+package com.natalinobusa.breakfast
+
+// the service, actors and paths
+import akka.actor.{ Actor }
+import spray.routing.HttpService
+import spray.routing.directives.PathDirectives._
+
+// our breakfast elements
+import elements._
+
+// marshalling breakfast to json
+import spray.httpx.SprayJsonSupport.sprayJsonMarshaller
+import elements.JsonImplicits._
+
+// we don't implement our route structure directly in the service actor because
+// we want to be able to test it independently, without having to spin up an actor
+class BreakfastApiService extends Actor with HttpService {
+
+  // the HttpService trait defines only one abstract member, which
+  // connects the services environment to the enclosing actor or test
+  def actorRefFactory = context
+
+  //curl -vv -H "Content-Type: application/json" localhost:8888/api/v1/breakfast?eggs=2&strips=4&slices=1&juices=1&coffee=2
+
+  val serviceRoute = {
+
+    pathPrefix("api" / "v1" / "breakfast") {
+      get {
+        parameters('eggs.as[Int], 'strips.as[Int], 'slices.as[Int], 'juices.as[Int], 'coffee.as[Int]) {
+          (friedeggs, baconstrips, breadslices, orangejuices, coffeemugs) =>
+
+            complete {
+              Breakfast(
+                MainDish(
+                  FriedEggs(friedeggs),
+                  CrispyBacon(baconstrips)),
+                SideDish(
+                  ToastedBread(breadslices)),
+                Drinks(
+                  OrangeJuice(orangejuices),
+                  HotCoffee(coffeemugs)))
+            }
+
+        }
+      }
+    }
+  }
+
+  // this actor only runs our route, but you could add
+  // other things here, like request stream processing,
+  // timeout handling or alternative handler registration
+  def receive = runRoute(serviceRoute)
+
+}
+```
+
 Main:
 
 The main is quit straightforward, the akka actor system is defined.   
