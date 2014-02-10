@@ -9,5 +9,12 @@ src_managed/
 project/boot/
 project/plugins/project/
 
+# dot files
+.cache
+.classpath
+.project
+.settings/
+
+
 # Scala-IDE specific
 .scala_dependencies
