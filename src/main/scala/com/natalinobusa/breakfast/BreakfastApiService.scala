@@ -1,20 +1,23 @@
 package com.natalinobusa.breakfast
 
 // the service, actors and paths
+
 import spray.routing.HttpServiceActor
 import spray.routing.directives.PathDirectives._
 
 // our breakfast elements
+
 import elements._
 
 // marshalling breakfast to json
+
 import spray.httpx.SprayJsonSupport.sprayJsonMarshaller
 import elements.JsonImplicits._
 
 // Routing embedded in the actor
 class BreakfastApiService extends HttpServiceActor {
 
-  //curl -vv -H "Content-Type: application/json" localhost:8888/api/v1/breakfast?eggs=2&strips=4&slices=1&juices=1&coffee=2
+  //curl -vv -H "Content-Type: application/json" "localhost:8888/api/v1/breakfast?eggs=2&strips=4&slices=1&juices=1&coffee=2"
 
   val serviceRoute = {
 
@@ -40,9 +43,8 @@ class BreakfastApiService extends HttpServiceActor {
     }
   }
 
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing,
-  // timeout handling or alternative handler registration
+  // this actor only runs our route,
+  // but you could add other things here
   def receive = runRoute(serviceRoute)
 
 }
