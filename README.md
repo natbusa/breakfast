@@ -1,3 +1,5 @@
+![codeship status](https://codeship.com/projects/077d3840-6ac9-0132-6a14-123b90e6e43d/status?branch=master)
+
 Breakfast
 =========
 
